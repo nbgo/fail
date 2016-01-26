@@ -41,6 +41,14 @@ type ErrorWrapper interface {
 	GetOriginalError() error
 }
 
+// ErrorWithFields is error which provides additional information as map.
+//
+// GetFields returns error's additional information as map
+type ErrorWithFields interface {
+	error
+	GetFields() map[string]interface{}
+}
+
 // ErrWithReason is error with message and reason.
 // Implements CompositeError
 type ErrWithReason struct {
@@ -80,6 +88,8 @@ func (extErr extendedError) Error() string {
 	return extErr.originalError.Error()
 }
 func (extErr extendedError) Location() string {
+	// %n is implemented by stack.Call
+	//noinspection GoPlaceholderCount
 	return fmt.Sprintf("%+v (%n)", extErr.location, extErr.location)
 }
 func (extErr extendedError) StackTrace() string {
@@ -222,6 +232,9 @@ func StackTraceToString(stackTrace stack.CallStack) string {
 		if result.Len() > 0 {
 			result.WriteString("\n")
 		}
+
+		// %n is implemented by stack.Call
+		//noinspection GoPlaceholderCount
 		result.WriteString(fmt.Sprintf("%+v (%n)", call, call))
 	}
 	return result.String()
