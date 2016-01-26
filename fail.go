@@ -38,7 +38,7 @@ type ErrorWithStackTrace interface {
 //
 // GetOriginalError returns original error that was wrapped.
 type ErrorWrapper interface {
-	GetOriginalError() error
+	OriginalError() error
 }
 
 // ErrorWithFields is error which provides additional information as map.
@@ -46,7 +46,7 @@ type ErrorWrapper interface {
 // GetFields returns error's additional information as map
 type ErrorWithFields interface {
 	error
-	GetFields() map[string]interface{}
+	Fields() map[string]interface{}
 }
 
 // ErrWithReason is error with message and reason.
@@ -95,7 +95,7 @@ func (extErr extendedError) Location() string {
 func (extErr extendedError) StackTrace() string {
 	return StackTraceToString(extErr.stackTrace)
 }
-func (extErr extendedError) GetOriginalError() error {
+func (extErr extendedError) OriginalError() error {
 	return extErr.originalError
 }
 
@@ -197,7 +197,7 @@ func GetType(err error) reflect.Type {
 	var errType reflect.Type
 
 	if errorWrapper, isErrorWrapper := err.(ErrorWrapper); isErrorWrapper {
-		errType = GetType(errorWrapper.GetOriginalError())
+		errType = GetType(errorWrapper.OriginalError())
 	} else {
 		errType = reflect.TypeOf(err)
 	}
@@ -209,7 +209,7 @@ func GetType(err error) reflect.Type {
 // If provided error implements ErrorWrapper then first non-ErrorWrapper is search for recursively.
 func GetOriginalError(err error) error {
 	if errorWrapper, isErrorWrapper := err.(ErrorWrapper); isErrorWrapper {
-		return GetOriginalError(errorWrapper.GetOriginalError())
+		return GetOriginalError(errorWrapper.OriginalError())
 	}
 
 	return err
