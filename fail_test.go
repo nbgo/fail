@@ -7,6 +7,7 @@ import (
 	"github.com/nbgo/fail"
 	"fmt"
 	"strings"
+	"reflect"
 )
 
 type MyError struct {
@@ -46,6 +47,12 @@ func TestFail(t *testing.T) {
 		Convey("should have no stack trace", func() {
 			So(fail.GetStackTrace(err), ShouldBeEmpty)
 		})
+		Convey("GetOriginalError() should return itself", func() {
+			So(fail.GetOriginalError(err), ShouldEqual, err)
+		})
+		Convey("GetType() should return type of itself", func() {
+			So(fail.GetType(err), ShouldEqual, reflect.TypeOf(err))
+		})
 	})
 
 	Convey("Simple extended error", t, func() {
@@ -58,14 +65,14 @@ func TestFail(t *testing.T) {
 			So(fail.GetInner(err), ShouldBeNil)
 		})
 		Convey("should have correct location", func() {
-			So(fail.GetLocation(err), ShouldContainSubstring, "github.com/nbgo/fail/fail_test.go:53")
+			So(fail.GetLocation(err), ShouldContainSubstring, "github.com/nbgo/fail/fail_test.go:60")
 			So(fail.GetLocation(err), ShouldContainSubstring, "TestFail.")
 		})
 		Convey("should have correct stack trace", func() {
 			stackTrace := fail.GetStackTrace(err)
 			So(stackTrace, ShouldContainSubstring, "TestFail.")
-			So(stackTrace, ShouldContainSubstring, "fail_test.go:53")
-			So(stackTrace, ShouldContainSubstring, "fail_test.go:70")
+			So(stackTrace, ShouldContainSubstring, "fail_test.go:60")
+			So(stackTrace, ShouldContainSubstring, "fail_test.go:77")
 		})
 	})
 
