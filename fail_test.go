@@ -21,6 +21,19 @@ func (this MyError) InnerError() error {
 	return this.reason
 }
 
+type MyErrWithFields struct {
+	Param1 string
+	Param2 string
+}
+
+func (err MyErrWithFields) Error() string {
+	return fmt.Sprintf("This is an error with fields: %v, %v", err.Param1, err.Param2)
+}
+
+func (err MyErrWithFields) Fields() map[string]interface{} {
+	return map[string]interface{}{"param1": err.Param1, "param2": err.Param2}
+}
+
 func TestFail(t *testing.T) {
 	Convey("Standard error", t, func() {
 		err := errors.New("Error 1 occurred.")
@@ -45,14 +58,14 @@ func TestFail(t *testing.T) {
 			So(fail.GetInner(err), ShouldBeNil)
 		})
 		Convey("should have correct location", func() {
-			So(fail.GetLocation(err), ShouldContainSubstring, "github.com/nbgo/fail/fail_test.go:40")
+			So(fail.GetLocation(err), ShouldContainSubstring, "github.com/nbgo/fail/fail_test.go:53")
 			So(fail.GetLocation(err), ShouldContainSubstring, "TestFail.")
 		})
 		Convey("should have correct stack trace", func() {
 			stackTrace := fail.GetStackTrace(err)
 			So(stackTrace, ShouldContainSubstring, "TestFail.")
-			So(stackTrace, ShouldContainSubstring, "fail_test.go:40")
-			So(stackTrace, ShouldContainSubstring, "fail_test.go:57")
+			So(stackTrace, ShouldContainSubstring, "fail_test.go:53")
+			So(stackTrace, ShouldContainSubstring, "fail_test.go:70")
 		})
 	})
 
@@ -164,4 +177,19 @@ func TestFail(t *testing.T) {
 		So(fail.GetErrorByType(err3, MyError{}), ShouldEqual, innerErr)
 		So(fail.GetErrorByType(err4, MyError{}), ShouldBeNil)
 	})
+
+	Convey("ErrWithFields", t, func() {
+		err := fail.New(fail.New(MyErrWithFields{"p1", "p2"}))
+		So(err.Error(), ShouldEqual, "This is an error with fields: p1, p2")
+		errWithFields := err.(fail.ErrorWithFields)
+		fields := errWithFields.Fields()
+		So(fields, ShouldNotBeNil)
+		So(errWithFields.Fields(), ShouldResemble, map[string]interface{}{"param1":"p1", "param2":"p2"})
+
+		err = fail.News("test")
+		errWithFields = err.(fail.ErrorWithFields)
+		fields = errWithFields.Fields()
+		So(fields, ShouldBeNil)
+	});
+
 }
