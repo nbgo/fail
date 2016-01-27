@@ -96,7 +96,17 @@ func (extErr extendedError) StackTrace() string {
 	return StackTraceToString(extErr.stackTrace)
 }
 func (extErr extendedError) OriginalError() error {
-	return extErr.originalError
+	originalError := extErr.originalError
+	if errorWrapper, isErrorWrapper := originalError.(ErrorWrapper); isErrorWrapper {
+		return errorWrapper.OriginalError()
+	}
+	return originalError
+}
+func (extErr extendedError) Fields() map[string]interface{} {
+	if errWithFields, isErrWithFields := extErr.originalError.(ErrorWithFields); isErrWithFields {
+		return errWithFields.Fields()
+	}
+	return nil
 }
 
 // New creates a new error that captures stack trace and location where it is created
@@ -194,24 +204,21 @@ func GetFullDetails(err error) string {
 // If provided error implements ErrorWrapper then GetType is run for its original error
 // until first non-ErrorWrapper is found.
 func GetType(err error) reflect.Type {
-	var errType reflect.Type
-
+	var errToGetTypeOf error
 	if errorWrapper, isErrorWrapper := err.(ErrorWrapper); isErrorWrapper {
-		errType = GetType(errorWrapper.OriginalError())
+		errToGetTypeOf = errorWrapper.OriginalError()
 	} else {
-		errType = reflect.TypeOf(err)
+		errToGetTypeOf = err
 	}
-
-	return errType
+	return reflect.TypeOf(errToGetTypeOf)
 }
 
 // GetOriginalError returns the original error.
 // If provided error implements ErrorWrapper then first non-ErrorWrapper is search for recursively.
 func GetOriginalError(err error) error {
 	if errorWrapper, isErrorWrapper := err.(ErrorWrapper); isErrorWrapper {
-		return GetOriginalError(errorWrapper.OriginalError())
+		return errorWrapper.OriginalError()
 	}
-
 	return err
 }
 
