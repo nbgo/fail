@@ -103,7 +103,7 @@ func (extErr extendedError) OriginalError() error {
 	return originalError
 }
 func (extErr extendedError) Fields() map[string]interface{} {
-	if errWithFields, isErrWithFields := extErr.originalError.(ErrorWithFields); isErrWithFields {
+	if errWithFields, isErrWithFields := extErr.OriginalError().(ErrorWithFields); isErrWithFields {
 		return errWithFields.Fields()
 	}
 	return nil
